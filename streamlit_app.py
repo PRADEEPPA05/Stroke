@@ -4,6 +4,9 @@ import pandas as pd
 import joblib
 import shap
 import matplotlib.pyplot as plt
+import shap
+import warnings
+warnings.filterwarnings("ignore")
 
 import zipfile
 import joblib
@@ -83,22 +86,29 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # SHAP explainability using Random Forest only
-    st.subheader("🔍 Feature Contribution (SHAP)")
-    
+   st.subheader("🔍 Feature Contribution (SHAP)")
+
     try:
-        base_model = model.estimators_[0].base_estimator  # Use RandomForest (first in voting model)
-        explainer = shap.TreeExplainer(base_model)
+        # Get the RandomForestClassifier directly from VotingClassifier
+        rf_calibrated = model.estimators_[0]  # rf_cal
+        rf_model = rf_calibrated.base_estimator  # Actual RandomForestClassifier
+    
+        explainer = shap.TreeExplainer(rf_model)
         shap_values = explainer.shap_values(input_df)
     
-        # Plot SHAP values for class 1 (stroke)
+        # Plot SHAP bar chart for class 1 (stroke)
         fig, ax = plt.subplots()
         shap.summary_plot(shap_values[1], input_df, plot_type="bar", show=False)
         st.pyplot(fig)
     
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
-    
+
+    st.write("Model inner type:", type(rf_model))
+    st.write("Input shape:", input_df.shape)
+    st.write("Input columns:", input_df.columns.tolist())
+
+
 
 
 
