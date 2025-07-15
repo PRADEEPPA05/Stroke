@@ -66,6 +66,24 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
+
+    # 🔍 SHAP Explainability
+    st.subheader("🔍 Feature Contribution (SHAP)")
+    try:
+        # Load feature names from training
+        feature_names = joblib.load("model_features.pkl")
+        background = pd.DataFrame([np.zeros(len(feature_names))], columns=feature_names)
+    
+        # Create SHAP explainer using model.predict
+        explainer = shap.Explainer(model.predict, background)
+        shap_values = explainer(input_df)
+    
+        # Plot
+        st.set_option('deprecation.showPyplotGlobalUse', False)
+        st.pyplot(shap.plots.bar(shap_values[0], max_display=10))
+    except Exception as e:
+        st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
+
     # # SHAP Explanation
     # st.subheader("🔍 Feature Contribution (SHAP)")
     # try:
@@ -77,17 +95,17 @@ if st.button("🔍 Predict Stroke Risk"):
     # except Exception as e:
     #     st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
     # 🔍 SHAP Explainability
-    st.subheader("🔍 Feature Contribution (SHAP)")
-    try:
-        # Create explainer
-        explainer = shap.Explainer(model.predict, X_train)
-        shap_values = explainer(input_df)
+    # st.subheader("🔍 Feature Contribution (SHAP)")
+    # try:
+    #     # Create explainer
+    #     explainer = shap.Explainer(model.predict, X_train)
+    #     shap_values = explainer(input_df)
     
-        # Plot SHAP values
-        st.set_option('deprecation.showPyplotGlobalUse', False)
-        st.pyplot(shap.plots.bar(shap_values[0], max_display=10))
-    except Exception as e:
-        st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
+    #     # Plot SHAP values
+    #     # st.set_option('deprecation.showPyplotGlobalUse', False)
+    #     st.pyplot(shap.plots.bar(shap_values[0], max_display=10))
+    # except Exception as e:
+    #     st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
 
 
 
