@@ -72,10 +72,13 @@ if st.button("🔍 Predict Stroke Risk"):
 
     st.subheader(f"🔢 Stroke Probability: {round(stroke_prob * 100, 2)}%")
 
-    if stroke_pred == 1:
+    if stroke_prob >= 0.4:
         st.error("🔴 High Risk of Stroke.")
+    elif stroke_prob >= 0.25:
+        st.warning("🟠 Moderate Risk of Stroke.")
     else:
         st.success("✅ Low Risk of Stroke Detected.")
+
 
     # SHAP explainability
     st.subheader("🔍 Feature Contribution (SHAP)")
