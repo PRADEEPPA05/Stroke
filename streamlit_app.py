@@ -56,15 +56,15 @@ if st.button("🔍 Predict Stroke Risk"):
 
     # Predict probability
     stroke_prob = model.predict_proba(input_df)[0][1]
+    stroke_percent = round(stroke_prob * 100, 2)
 
-    # Use threshold 0.25 to determine stroke risk
-    threshold = 0.25
-    stroke_pred = 1 if stroke_prob >= threshold else 0
+    st.subheader(f"🔢 Stroke Probability: {stroke_percent}%")
 
-    st.subheader(f"🔢 Stroke Probability: {round(stroke_prob * 100, 2)}%")
-
-    if stroke_pred == 1:
+    # Risk categorization with thresholds
+    if stroke_percent >= 40:
         st.error("🔴 High Risk of Stroke.")
+    elif stroke_percent >= 25:
+        st.warning("🟠 Moderate Risk of Stroke.")
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
@@ -75,9 +75,11 @@ if st.button("🔍 Predict Stroke Risk"):
         explainer = shap.Explainer(model.predict_proba, input_df)
         shap_values = explainer(input_df)
 
-        # Plot SHAP bar chart for class 1 (stroke)
+        # Handle shap_values format
+        vals = shap_values[1] if isinstance(shap_values, list) and len(shap_values) > 1 else shap_values
+
         fig, ax = plt.subplots()
-        shap.plots.bar(shap_values[0], max_display=10, show=False)
+        shap.plots.bar(vals[0], max_display=10, show=False)
         st.pyplot(fig)
 
     except Exception as e:
