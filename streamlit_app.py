@@ -63,6 +63,12 @@ if st.button("🔍 Predict Stroke Risk"):
     # Create DataFrame in correct feature order
     input_df = pd.DataFrame([input_dict])[model_features]
 
+    st.write("📊 Input DataFrame Preview:")
+    st.dataframe(input_df)
+    
+    st.write("🧠 Model Type:", type(model))
+
+
     # Predict probability
     stroke_prob = model.predict_proba(input_df)[0][1]
 
