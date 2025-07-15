@@ -9,15 +9,11 @@ import matplotlib.pyplot as plt
 model = joblib.load("stroke_predictor_model.pkl")
 model_features = joblib.load("model_features.pkl")
 
-# SHAP explainer
-explainer = shap.Explainer(model.predict_proba, pd.DataFrame([np.zeros(len(model_features))], columns=model_features))
-
-# Streamlit UI
 st.set_page_config(page_title="🧠 Stroke Prediction App")
 st.title("🧠 Stroke Prediction App")
 st.subheader("Fill in the details to predict stroke risk.")
 
-# Input Fields
+# User Inputs
 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
 age = st.number_input("Age", min_value=1, max_value=120, value=30)
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
@@ -46,12 +42,11 @@ if st.button("🔍 Predict Stroke Risk"):
     # One-hot encode work_type
     work_type_cols = ['work_type_Never_worked', 'work_type_Private', 'work_type_Self-employed', 'work_type_children']
     for col in work_type_cols:
-        input_dict[col] = 1 if col.split("_")[1].replace("-", "_") == work_type.replace("-", "_") else 0
+        input_dict[col] = 1 if col.split("_")[1] == work_type else 0
 
-    # Build DataFrame
     input_df = pd.DataFrame([input_dict])
 
-    # Ensure all required columns are present
+    # Add missing columns
     for col in model_features:
         if col not in input_df.columns:
             input_df[col] = 0
@@ -60,9 +55,9 @@ if st.button("🔍 Predict Stroke Risk"):
     # Predict
     stroke_prob = model.predict_proba(input_df)[0][1]
     stroke_percent = round(stroke_prob * 100, 1)
-
     st.subheader(f"🔢 Stroke Probability: {stroke_percent}%")
 
+    # Risk display
     if stroke_percent >= 70:
         st.error("🔴 High Risk of Stroke.")
     elif stroke_percent >= 30:
@@ -70,24 +65,19 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # SHAP Plot
+    # SHAP Explanation
     st.subheader("🔍 Feature Contribution (SHAP)")
-    # SHAP Visualization (Safe and Clean)
     try:
-        # Prepare background dataset (dummy, as TreeExplainer needs it)
-        background = pd.DataFrame([np.zeros(len(input_df.columns))], columns=input_df.columns)
+        background = pd.DataFrame([np.zeros(len(model_features))], columns=model_features)
         explainer = shap.Explainer(model.predict, background)
         shap_values = explainer(input_df)
-    
-        # Plot SHAP bar chart
-        st.subheader("🔍 Feature Contribution (SHAP)")
-        fig = shap.plots.bar(shap_values[0], max_display=10, show=False)
+
+        fig, ax = plt.subplots()
+        shap.plots.bar(shap_values[0], max_display=10, show=False)
         st.pyplot(fig)
+
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
-
-
-
 
 
 
