@@ -77,17 +77,23 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # SHAP explainability
+# SHAP explainability using LightGBM (not VotingClassifier)
     st.subheader("🔍 Feature Contribution (SHAP)")
-
+    
     try:
-        explainer = shap.Explainer(model.predict_proba, input_df)
-        shap_values = explainer(input_df)
-
+        # Load LightGBM model separately if needed
+        import lightgbm as lgb
+        lgb_model = model.named_estimators_["lgbm"]  # assuming "lgbm" is the name in your VotingClassifier
+    
+        explainer = shap.TreeExplainer(lgb_model)
+        shap_values = explainer.shap_values(input_df)
+    
+        # Plot SHAP bar chart
         fig, ax = plt.subplots()
-        shap.plots.bar(shap_values[0], max_display=10, show=False)
+        shap.summary_plot(shap_values, input_df, plot_type="bar", show=False)
         st.pyplot(fig)
-
+    
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
+
 
