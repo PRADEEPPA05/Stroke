@@ -8,13 +8,16 @@ import matplotlib.pyplot as plt
 # Load model and feature list
 model = joblib.load("stroke_predictor_model.pkl")
 model_features = joblib.load("model_features.pkl")
-explainer = shap.TreeExplainer(model)
 
+# SHAP explainer
+explainer = shap.Explainer(model.predict_proba, pd.DataFrame([np.zeros(len(model_features))], columns=model_features))
+
+# Streamlit UI
 st.set_page_config(page_title="🧠 Stroke Prediction App")
 st.title("🧠 Stroke Prediction App")
 st.subheader("Fill in the details to predict stroke risk.")
 
-# User Inputs
+# Input Fields
 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
 age = st.number_input("Age", min_value=1, max_value=120, value=30)
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
@@ -43,14 +46,15 @@ if st.button("🔍 Predict Stroke Risk"):
     # One-hot encode work_type
     work_type_cols = ['work_type_Never_worked', 'work_type_Private', 'work_type_Self-employed', 'work_type_children']
     for col in work_type_cols:
-        input_dict[col] = 1 if col.split("_")[1] == work_type else 0
+        input_dict[col] = 1 if col.split("_")[1].replace("-", "_") == work_type.replace("-", "_") else 0
 
+    # Build DataFrame
     input_df = pd.DataFrame([input_dict])
 
-    # Reorder columns to match model
+    # Ensure all required columns are present
     for col in model_features:
         if col not in input_df.columns:
-            input_df[col] = 0  # Add missing columns
+            input_df[col] = 0
     input_df = input_df[model_features]
 
     # Predict
@@ -59,7 +63,6 @@ if st.button("🔍 Predict Stroke Risk"):
 
     st.subheader(f"🔢 Stroke Probability: {stroke_percent}%")
 
-    # Display risk level
     if stroke_percent >= 70:
         st.error("🔴 High Risk of Stroke.")
     elif stroke_percent >= 30:
@@ -67,14 +70,16 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # 🔍 SHAP Explainability
+    # SHAP Plot
     st.subheader("🔍 Feature Contribution (SHAP)")
     try:
-        shap_values = explainer.shap_values(input_df)
-        shap.summary_plot(shap_values, input_df, plot_type="bar", show=False)
-        st.pyplot(plt.gcf())
+        shap_vals = explainer(input_df)
+        st.set_option('deprecation.showPyplotGlobalUse', False)
+        shap.plots.bar(shap_vals[0], max_display=10)
+        st.pyplot(bbox_inches='tight')
     except Exception as e:
-        st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
+        st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
+
 
 
 
