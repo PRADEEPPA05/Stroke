@@ -66,14 +66,26 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # SHAP Explanation
+    # # SHAP Explanation
+    # st.subheader("🔍 Feature Contribution (SHAP)")
+    # try:
+    #     shap_input = input_df.astype(float)  # Ensure numerical
+    #     shap_values = explainer.shap_values(shap_input)
+    #     #st.set_option('deprecation.showPyplotGlobalUse', False)
+    #     shap.initjs()
+    #     st.pyplot(shap.plots.bar(shap_values[1][0], show=False))
+    # except Exception as e:
+    #     st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
+    # 🔍 SHAP Explainability
     st.subheader("🔍 Feature Contribution (SHAP)")
     try:
-        shap_input = input_df.astype(float)  # Ensure numerical
-        shap_values = explainer.shap_values(shap_input)
-        #st.set_option('deprecation.showPyplotGlobalUse', False)
-        shap.initjs()
-        st.pyplot(shap.plots.bar(shap_values[1][0], show=False))
+        # Create explainer
+        explainer = shap.Explainer(model.predict, X_train)
+        shap_values = explainer(input_df)
+    
+        # Plot SHAP values
+        st.set_option('deprecation.showPyplotGlobalUse', False)
+        st.pyplot(shap.plots.bar(shap_values[0], max_display=10))
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
 
