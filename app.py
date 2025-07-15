@@ -3,75 +3,79 @@ import pandas as pd
 import numpy as np
 import joblib
 import shap
-import matplotlib.pyplot as plt
 
-# Load model and features
+# Load model and feature list
 model = joblib.load("stroke_predictor_model.pkl")
-feature_names = joblib.load("model_features.pkl")
+model_features = joblib.load("model_features.pkl")
+explainer = shap.TreeExplainer(model)
 
-st.set_page_config(page_title="🧠 Stroke Prediction App", layout="centered")
-st.title("\U0001f9e0 Stroke Prediction App")
-st.markdown("Fill in the details to predict stroke risk.")
+st.set_page_config(page_title="🧠 Stroke Prediction App")
+st.title("🧠 Stroke Prediction App")
+st.subheader("Fill in the details to predict stroke risk.")
 
-# Inputs
+# User Inputs
 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-age = st.number_input("Age", min_value=1, max_value=120, value=30, step=1)
+age = st.number_input("Age", min_value=1, max_value=120, value=30)
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
 heart_disease = st.selectbox("Heart Disease", ["No", "Yes"])
 ever_married = st.selectbox("Ever Married", ["No", "Yes"])
 work_type = st.selectbox("Work Type", ["Private", "Self-employed", "Govt_job", "children", "Never_worked"])
 residence_type = st.selectbox("Residence Type", ["Urban", "Rural"])
 avg_glucose_level = st.number_input("Average Glucose Level", min_value=50.0, max_value=300.0, value=100.0)
-bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=25.0)
+bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=28.0)
 smoking_status = st.selectbox("Smoking Status", ["never smoked", "formerly smoked", "smokes", "Unknown"])
 
-# One-hot encode work_type
-input_data = {
-    'gender': 1 if gender == "Male" else 0,
-    'age': age,
-    'hypertension': 1 if hypertension == "Yes" else 0,
-    'heart_disease': 1 if heart_disease == "Yes" else 0,
-    'ever_married': 1 if ever_married == "Yes" else 0,
-    'Residence_type': 1 if residence_type == "Urban" else 0,
-    'avg_glucose_level': avg_glucose_level,
-    'bmi': bmi,
-    'smoking_status': ["never smoked", "formerly smoked", "smokes", "Unknown"].index(smoking_status),
-    'work_type_Never_worked': 1 if work_type == "Never_worked" else 0,
-    'work_type_Private': 1 if work_type == "Private" else 0,
-    'work_type_Self-employed': 1 if work_type == "Self-employed" else 0,
-    'work_type_children': 1 if work_type == "children" else 0
-}
+if st.button("🔍 Predict Stroke Risk"):
+    # Encode inputs
+    input_dict = {
+        "gender": 1 if gender == "Male" else (2 if gender == "Other" else 0),
+        "age": age,
+        "hypertension": 1 if hypertension == "Yes" else 0,
+        "heart_disease": 1 if heart_disease == "Yes" else 0,
+        "ever_married": 1 if ever_married == "Yes" else 0,
+        "Residence_type": 1 if residence_type == "Urban" else 0,
+        "avg_glucose_level": avg_glucose_level,
+        "bmi": bmi,
+        "smoking_status": {"never smoked": 0, "formerly smoked": 1, "smokes": 2, "Unknown": 3}[smoking_status]
+    }
 
-input_df = pd.DataFrame([input_data])
-input_df = input_df.reindex(columns=feature_names, fill_value=0)
+    # One-hot encode work_type
+    work_type_cols = ['work_type_Never_worked', 'work_type_Private', 'work_type_Self-employed', 'work_type_children']
+    for col in work_type_cols:
+        input_dict[col] = 1 if col.split("_")[1] == work_type else 0
 
-if st.button("Predict Stroke Risk"):
-    # Prediction
-    prob = model.predict_proba(input_df)[:, 1][0]
-    stroke_prob = round(prob * 100, 2)
-    st.markdown(f"\n\n\U0001f522 Stroke Probability: **{stroke_prob}%**")
+    input_df = pd.DataFrame([input_dict])
+    
+    # Reorder columns to match model
+    for col in model_features:
+        if col not in input_df.columns:
+            input_df[col] = 0  # Add missing columns
+    input_df = input_df[model_features]
 
-    # Risk level
-    if stroke_prob >= 50:
+    # Predict
+    stroke_prob = model.predict_proba(input_df)[0][1]
+    stroke_percent = round(stroke_prob * 100, 1)
+
+    st.subheader(f"🔢 Stroke Probability: {stroke_percent}%")
+    
+    # Display risk level
+    if stroke_percent >= 70:
         st.error("🔴 High Risk of Stroke.")
-    elif stroke_prob >= 20:
+    elif stroke_percent >= 30:
         st.warning("🟠 Moderate Risk of Stroke.")
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # SHAP Explainability
+    # SHAP Explanation
+    st.subheader("🔍 Feature Contribution (SHAP)")
     try:
-        explainer = shap.Explainer(model)
-        shap_values = explainer(input_df)
-
-        st.subheader("\U0001f50d Feature Contribution (SHAP)")
-        fig, ax = plt.subplots()
-        shap.plots.bar(shap_values[0], max_display=10, show=False)
-        st.pyplot(fig)
-
+        shap_input = input_df.astype(float)  # Ensure numerical
+        shap_values = explainer.shap_values(shap_input)
+        st.set_option('deprecation.showPyplotGlobalUse', False)
+        shap.initjs()
+        st.pyplot(shap.plots.bar(shap_values[1][0], show=False))
     except Exception as e:
-        st.warning("\u26a0\ufe0f SHAP explainability not available for this input.")
-        st.text(str(e))
+        st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
 
 
 
