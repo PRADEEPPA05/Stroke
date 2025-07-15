@@ -71,7 +71,7 @@ if st.button("🔍 Predict Stroke Risk"):
     try:
         shap_input = input_df.astype(float)  # Ensure numerical
         shap_values = explainer.shap_values(shap_input)
-        st.set_option('deprecation.showPyplotGlobalUse', False)
+        #st.set_option('deprecation.showPyplotGlobalUse', False)
         shap.initjs()
         st.pyplot(shap.plots.bar(shap_values[1][0], show=False))
     except Exception as e:
