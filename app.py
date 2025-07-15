@@ -48,8 +48,9 @@ if st.button("Predict Stroke Risk"):
     prediction = model.predict(input_df)
     probability = model.predict_proba(input_df)[0][1]
 
-    if prediction[0] == 1:
-        st.error(f"High risk of stroke! (Probability: {probability:.2f})")
-
+    threshold = 0.20  # Lower threshold to increase sensitivity
+    if probability > threshold:
+        st.error(f"⚠️ High risk of stroke! (Probability: {probability:.2f})")
     else:
         st.success(f"✅ No stroke risk detected (Probability: {probability:.2f})")
+
