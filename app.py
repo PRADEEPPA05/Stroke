@@ -61,13 +61,23 @@ if st.button("🔍 Predict Stroke Risk"):
     stroke_percent = round(stroke_prob * 100, 1)
     st.subheader(f"🔢 Stroke Probability: {stroke_percent}%")
 
-    # Risk Display
-    if stroke_percent >= 20:
+    st.write(f"🧪 Debug: stroke_percent = {stroke_percent}")
+    
+    if stroke_percent >= 70:
         st.error("🔴 High Risk of Stroke.")
-    elif stroke_percent >= 10:
+    elif stroke_percent >= 30:
         st.warning("🟠 Moderate Risk of Stroke.")
     else:
         st.success("✅ Low Risk of Stroke Detected.")
+
+
+    # Risk Display
+    # if stroke_percent >= 20:
+    #     st.error("🔴 High Risk of Stroke.")
+    # elif stroke_percent >= 10:
+    #     st.warning("🟠 Moderate Risk of Stroke.")
+    # else:
+    #     st.success("✅ Low Risk of Stroke Detected.")
 
     # SHAP Explanation
     st.subheader("🔍 Feature Contribution (SHAP)")
