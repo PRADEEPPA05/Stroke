@@ -2,8 +2,9 @@ streamlit
 pandas
 numpy
 scikit-learn
-joblib
-shap
-matplotlib
 lightgbm
 imblearn
+shap
+matplotlib
+joblib
+
