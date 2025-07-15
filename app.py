@@ -79,7 +79,7 @@ if st.button("🔍 Predict Stroke Risk"):
         shap_values = explainer(input_df)
     
         # Plot
-        st.set_option('deprecation.showPyplotGlobalUse', False)
+        
         st.pyplot(shap.plots.bar(shap_values[0], max_display=10))
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available for this input.\n\n{e}")
