@@ -50,7 +50,7 @@ if st.button("Predict Stroke Risk"):
 
     threshold = 0.20  # Lower threshold to increase sensitivity
     if probability > threshold:
-        st.error(f"⚠️ High risk of stroke! (Probability: {probability:.2f})")
+        st.error(f" High risk of stroke! (Probability: {probability:.2f})")
     else:
         st.success(f"✅ No stroke risk detected (Probability: {probability:.2f})")
 
