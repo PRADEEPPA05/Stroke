@@ -61,14 +61,19 @@ if st.button("Predict Stroke Risk"):
     # SHAP explanation
     st.subheader("🔍 Feature Contribution (SHAP)")
     explainer = shap.TreeExplainer(model)
+   # Compute SHAP values
     shap_values = explainer.shap_values(input_df)
-
-    # Handle binary classification case safely
-    try:
-        shap_vals = shap_values[1][0]  # Works when shap_values is a list of arrays
-    except:
-        shap_vals = shap_values[0]  # Works when shap_values is a single array
     
+    # Get the correct SHAP value array
+    if isinstance(shap_values, list):
+        shap_vals = shap_values[1][0] if len(shap_values) > 1 else shap_values[0][0]
+    else:
+        shap_vals = shap_values[0]
+    
+    # Ensure it's a 1D array
+    shap_vals = np.array(shap_vals).flatten()
+    
+    # Plot
     fig, ax = plt.subplots()
     shap.bar_plot(shap_vals, feature_names=feature_names, max_display=10)
     st.pyplot(fig)
