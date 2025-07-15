@@ -46,7 +46,7 @@ if st.button("🔍 Predict Stroke Risk"):
 
     input_df = pd.DataFrame([input_dict])
 
-    # Add missing columns
+    # Align features
     for col in model_features:
         if col not in input_df.columns:
             input_df[col] = 0
@@ -57,7 +57,7 @@ if st.button("🔍 Predict Stroke Risk"):
     stroke_percent = round(stroke_prob * 100, 1)
     st.subheader(f"🔢 Stroke Probability: {stroke_percent}%")
 
-    # Risk display
+    # Risk level display
     if stroke_percent >= 70:
         st.error("🔴 High Risk of Stroke.")
     elif stroke_percent >= 30:
@@ -65,19 +65,27 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-    # SHAP Explanation
+    # SHAP Explainability
     st.subheader("🔍 Feature Contribution (SHAP)")
     try:
-        background = pd.DataFrame([np.zeros(len(model_features))], columns=model_features)
-        explainer = shap.Explainer(model.predict, background)
+        background = shap.maskers.Independent(pd.DataFrame([input_df.iloc[0]]))
+        explainer = shap.Explainer(model, background)
         shap_values = explainer(input_df)
 
+        shap_df = pd.DataFrame({
+            "Feature": model_features,
+            "SHAP Value": shap_values.values[0]
+        }).sort_values(by="SHAP Value", key=abs, ascending=False)
+
         fig, ax = plt.subplots()
-        shap.plots.bar(shap_values[0], max_display=10, show=False)
+        ax.barh(shap_df["Feature"][:10], shap_df["SHAP Value"][:10])
+        ax.set_xlabel("SHAP Value")
+        ax.set_title("Top Feature Contributions")
         st.pyplot(fig)
 
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
+
 
 
 
