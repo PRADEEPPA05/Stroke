@@ -4,8 +4,13 @@ import joblib
 import shap
 import matplotlib.pyplot as plt
 
-# Load model, scaler, features
-model = joblib.load("stroke_predictor_model.pkl")
+import zipfile
+import joblib
+
+with zipfile.ZipFile('stroke_predictor_model.zip', 'r') as zip_ref:
+    zip_ref.extractall()  # Extracts stroke_predictor_model.pkl in current folder
+
+model = joblib.load('stroke_predictor_model.pkl')
 scaler = joblib.load("scaler.pkl")
 model_features = joblib.load("model_features.pkl")
 
