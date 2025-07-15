@@ -72,13 +72,20 @@ if st.button("🔍 Predict Stroke Risk"):
 
     # SHAP Plot
     st.subheader("🔍 Feature Contribution (SHAP)")
+    # SHAP Visualization (Safe and Clean)
     try:
-        shap_vals = explainer(input_df)
-        st.set_option('deprecation.showPyplotGlobalUse', False)
-        shap.plots.bar(shap_vals[0], max_display=10)
-        st.pyplot(bbox_inches='tight')
+        # Prepare background dataset (dummy, as TreeExplainer needs it)
+        background = pd.DataFrame([np.zeros(len(input_df.columns))], columns=input_df.columns)
+        explainer = shap.Explainer(model.predict, background)
+        shap_values = explainer(input_df)
+    
+        # Plot SHAP bar chart
+        st.subheader("🔍 Feature Contribution (SHAP)")
+        fig = shap.plots.bar(shap_values[0], max_display=10, show=False)
+        st.pyplot(fig)
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
+
 
 
 
