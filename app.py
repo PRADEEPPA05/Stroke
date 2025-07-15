@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load model and expected features
+# Load model and model features
 model = joblib.load("stroke_predictor_model.pkl")
 model_features = joblib.load("model_features.pkl")
 
@@ -12,7 +12,7 @@ st.set_page_config(page_title="Stroke Prediction App", layout="centered")
 st.title("🧠 Stroke Prediction App")
 st.write("Fill in the details to predict stroke risk.")
 
-# Input form
+# User input fields
 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
 age = st.slider("Age", 1, 100, 30)
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
@@ -24,7 +24,7 @@ avg_glucose_level = st.number_input("Average Glucose Level", min_value=0.0, valu
 bmi = st.number_input("BMI", min_value=0.0, value=28.0)
 smoking_status = st.selectbox("Smoking Status", ["never smoked", "formerly smoked", "smokes", "Unknown"])
 
-# Mapping to numerical values
+# Map inputs to numerical
 data = {
     "gender": 1 if gender == "Male" else (2 if gender == "Other" else 0),
     "age": age,
@@ -39,22 +39,22 @@ data = {
                       2 if smoking_status == "smokes" else 3
 }
 
-# One-hot encode work_type based on model features
+# One-hot encode work_type
 work_type_encoded = {
     'work_type_Private': 0,
     'work_type_Self-employed': 0,
     'work_type_children': 0,
     'work_type_Never_worked': 0
 }
-selected_col = f"work_type_{work_type}"
-if selected_col in work_type_encoded:
-    work_type_encoded[selected_col] = 1
+selected_key = f"work_type_{work_type}"
+if selected_key in work_type_encoded:
+    work_type_encoded[selected_key] = 1
 
-# Combine all input
+# Combine all inputs
 input_data = {**data, **work_type_encoded}
 input_df = pd.DataFrame([input_data])
 
-# Ensure all model features are present in correct order
+# Ensure all model features are present
 for feature in model_features:
     if feature not in input_df.columns:
         input_df[feature] = 0
@@ -63,7 +63,13 @@ input_df = input_df[model_features]
 # Prediction
 if st.button("🔍 Predict Stroke Risk"):
     prediction = model.predict(input_df)[0]
-    if prediction == 1:
+    probability = model.predict_proba(input_df)[0][1] * 100
+
+    st.write(f"🔢 **Stroke Probability: {probability:.2f}%**")
+
+    if probability >= 50:
         st.error(" High Risk of Stroke Detected!")
+    elif probability >= 25:
+        st.warning(" Moderate Risk of Stroke.")
     else:
-        st.success("✅ No Stroke Risk Detected.")
+        st.success("✅ Low Risk of Stroke Detected.")
