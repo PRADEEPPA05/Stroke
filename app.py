@@ -14,7 +14,9 @@ st.write("Fill in the details to predict stroke risk.")
 
 # User input fields
 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-age = st.slider("Age", 1, 100, 30)
+
+age = st.number_input("Age", min_value=1.0, max_value=120.0, value=30.0)
+
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
 heart_disease = st.selectbox("Heart Disease", ["No", "Yes"])
 ever_married = st.selectbox("Ever Married", ["No", "Yes"])
@@ -65,11 +67,12 @@ if st.button("🔍 Predict Stroke Risk"):
     prediction = model.predict(input_df)[0]
     probability = model.predict_proba(input_df)[0][1] * 100
 
-    st.write(f"🔢 **Stroke Probability: {probability:.2f}%**")
+    st.write(f" **Stroke Probability: {probability:.2f}%**")
 
     if probability >= 50:
-        st.error(" High Risk of Stroke Detected!")
+        st.error("🔴 High Risk of Stroke Detected!")
     elif probability >= 25:
-        st.warning(" Moderate Risk of Stroke.")
+        st.warning("🟠 Moderate Risk of Stroke.")
     else:
         st.success("✅ Low Risk of Stroke Detected.")
+    
