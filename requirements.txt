@@ -5,9 +5,9 @@ numpy
 joblib
 imbalanced-learn
 lightgbm
-shap
-matplotlib
 seaborn
 ipython
+matplotlib>=3.7.0
+shap>=0.43.0
 
 
