@@ -83,24 +83,22 @@ if st.button("🔍 Predict Stroke Risk"):
     else:
         st.success("✅ Low Risk of Stroke Detected.")
 
-# SHAP explainability using LightGBM base model
+    # SHAP explainability using Random Forest only
     st.subheader("🔍 Feature Contribution (SHAP)")
     
     try:
-        import lightgbm as lgb
-        # Extract LightGBM model from VotingClassifier
-        lgb_model = model.named_estimators_["lgbm"]
-    
-        explainer = shap.TreeExplainer(lgb_model)
+        base_model = model.estimators_[0].base_estimator  # Use RandomForest (first in voting model)
+        explainer = shap.TreeExplainer(base_model)
         shap_values = explainer.shap_values(input_df)
     
-        # Plot SHAP summary for one instance
+        # Plot SHAP values for class 1 (stroke)
         fig, ax = plt.subplots()
-        shap.plots.bar(shap.Explanation(values=shap_values[1], base_values=explainer.expected_value[1], data=input_df), show=False)
+        shap.summary_plot(shap_values[1], input_df, plot_type="bar", show=False)
         st.pyplot(fig)
     
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
+    
 
 
 
