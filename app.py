@@ -63,9 +63,16 @@ if st.button("Predict Stroke Risk"):
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(input_df)
 
+    # Handle binary classification case safely
+    try:
+        shap_vals = shap_values[1][0]  # Works when shap_values is a list of arrays
+    except:
+        shap_vals = shap_values[0]  # Works when shap_values is a single array
+    
     fig, ax = plt.subplots()
-    shap.bar_plot(shap_values[1][0], feature_names=feature_names, max_display=10)
+    shap.bar_plot(shap_vals, feature_names=feature_names, max_display=10)
     st.pyplot(fig)
+
 
 # import streamlit as st
 # import pandas as pd
