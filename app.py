@@ -16,7 +16,9 @@ st.write("Fill in the details to predict stroke risk.")
 
 # User Input
 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-age = st.number_input("Age", min_value=1, max_value=120, value=30.0, step=1.0)
+
+age = st.number_input("Age", min_value=1, max_value=120, value=30, step=1)
+
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
 heart_disease = st.selectbox("Heart Disease", ["No", "Yes"])
 ever_married = st.selectbox("Ever Married", ["No", "Yes"])
