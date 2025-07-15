@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import joblib
@@ -11,7 +12,9 @@ with zipfile.ZipFile('stroke_predictor_model.zip', 'r') as zip_ref:
     zip_ref.extractall()  # Extracts stroke_predictor_model.pkl in current folder
 
 model = joblib.load('stroke_predictor_model.pkl')
-scaler = joblib.load("scaler.pkl")
+
+# Load the trained model and feature list
+
 model_features = joblib.load("model_features.pkl")
 
 st.set_page_config(page_title="🧠 Stroke Prediction App", layout="centered")
@@ -32,7 +35,7 @@ smoking_status = st.selectbox("Smoking Status", ["never smoked", "formerly smoke
 
 if st.button("🔍 Predict Stroke Risk"):
 
-    # Create input dictionary (one-hot encoding same as training)
+    # Prepare input dictionary matching training features
     input_dict = {
         'age': age,
         'hypertension': 1 if hypertension == "Yes" else 0,
@@ -52,33 +55,27 @@ if st.button("🔍 Predict Stroke Risk"):
         'smoking_status_smokes': 1 if smoking_status == "smokes" else 0,
     }
 
-    # Ensure all features present
-    for feat in model_features:
-        if feat not in input_dict:
-            input_dict[feat] = 0
+    # Make sure all model features are present in the input
+    for feature in model_features:
+        if feature not in input_dict:
+            input_dict[feature] = 0
 
-    # DataFrame in correct order
+    # Create DataFrame in correct feature order
     input_df = pd.DataFrame([input_dict])[model_features]
 
-    # Scale glucose and bmi using saved scaler
-    input_df[['avg_glucose_level', 'bmi']] = scaler.transform(input_df[['avg_glucose_level', 'bmi']])
-
-    # Predict stroke probability
+    # Predict probability
     stroke_prob = model.predict_proba(input_df)[0][1]
 
-    # Threshold for prediction
-    threshold = 0.25
-    stroke_pred = 1 if stroke_prob >= threshold else 0
-
+    # Show probability
     st.subheader(f"🔢 Stroke Probability: {round(stroke_prob * 100, 2)}%")
 
+    # Threshold logic
     if stroke_prob >= 0.4:
         st.error("🔴 High Risk of Stroke.")
     elif stroke_prob >= 0.25:
         st.warning("🟠 Moderate Risk of Stroke.")
     else:
         st.success("✅ Low Risk of Stroke Detected.")
-
 
     # SHAP explainability
     st.subheader("🔍 Feature Contribution (SHAP)")
@@ -90,5 +87,7 @@ if st.button("🔍 Predict Stroke Risk"):
         fig, ax = plt.subplots()
         shap.plots.bar(shap_values[0], max_display=10, show=False)
         st.pyplot(fig)
+
     except Exception as e:
         st.warning(f"⚠️ SHAP explainability not available.\n\n{e}")
+
